@@ -1,3 +1,0 @@
-package unshare
-
-import "C"

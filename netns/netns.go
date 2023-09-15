@@ -1,4 +1,5 @@
-package unshare
+// Package netns makes the process enter a new network namespace.
+package netns
 
 import "C"
 
@@ -15,6 +16,7 @@ import (
 
 func init() {
 	// runtime.GOMAXPROCS(1)
+	Network()
 }
 
 func Network() error {
