@@ -1,5 +1,7 @@
 # `unshare-go`
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/howardjohn/unshare-go.svg)](https://pkg.go.dev/github.com/howardjohn/unshare-go)
+
 `unshare-go` is a small module to make use of the [`unshare`](https://man7.org/linux/man-pages/man2/unshare.2.html) syscall.
 
 This allows creating new namespaces for a process, which can be used for things like running networking actions that typically require high privileges, etc.
