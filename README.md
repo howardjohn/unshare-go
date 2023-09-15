@@ -17,6 +17,8 @@ In many ways this is like `init()` functions, but called even earlier.
 
 As a result of this design, the library is not very flexible.
 
+Currently, only user and network namespaces are supported, although others could be added.
+
 ## Usage
 
 To use the library, simply import the package:
