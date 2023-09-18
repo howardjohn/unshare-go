@@ -29,6 +29,8 @@ import (
 	_ "github.com/howardjohn/unshare-go/userns"
 	// Create a new network namespace. This will have the 'lo' interface ready but nothing else.
 	_ "github.com/howardjohn/unshare-go/netns"
+	// Create a new mount namespace.
+	_ "github.com/howardjohn/unshare-go/mountns"
 )
 ```
 
@@ -36,6 +38,7 @@ Namespace creation is ordered:
 
 1. User namespace
 2. Network namespace
+3. Mount namespace
 
 That is, the network namespace is created inside the user namespace.
 

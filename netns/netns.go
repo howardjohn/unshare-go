@@ -1,6 +1,19 @@
 // Package netns makes the process enter a new network namespace.
 package netns
 
+/*
+#cgo CFLAGS: -Wall
+#define _GNU_SOURCE
+
+#include <sched.h>
+#include <stdlib.h>
+
+__attribute((constructor(102))) void enter_netns(void) {
+    if (unshare(CLONE_NEWNET) == -1) {
+        exit(1);
+    }
+}
+*/
 import "C"
 
 import (
