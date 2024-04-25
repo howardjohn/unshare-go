@@ -25,7 +25,7 @@ To use the library, simply import the package:
 
 ```go
 import (
-	// Create a new user namespace. This will map the current UID to 0.
+	// Create a new user namespace. This will map the current UID/GID to 0.
 	_ "github.com/howardjohn/unshare-go/userns"
 	// Create a new network namespace. This will have the 'lo' interface ready but nothing else.
 	_ "github.com/howardjohn/unshare-go/netns"
@@ -58,6 +58,7 @@ import (
 
 func main() {
 	log.Println(os.Getuid()) // Returns 0, always
+	log.Println(os.Getgid()) // Returns 0, always
 	net.Listen("tcp", "127.0.0.1:80") // This works, even when the process is not run as root.
 }
 ```
