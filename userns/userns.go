@@ -31,20 +31,14 @@ import (
 )
 
 func init() {
-	err := WriteMap("/proc/self/uid_map", map[uint32]uint32{
+	err := WriteUserMap(map[uint32]uint32{
 		OriginalUID(): 0,
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to create uid mapping: %v", err).Error())
 	}
 
-	// write deny in setgroups to disable setgroup(2) and enable writing to gid_map
-	err = os.WriteFile("/proc/self/setgroups", []byte("deny\n"), 0o644)
-	if err != nil {
-		panic(fmt.Errorf("failed to deny setgroups: %v", err).Error())
-	}
-
-	err = WriteMap("/proc/self/gid_map", map[uint32]uint32{
+	err = WriteGroupMap(map[uint32]uint32{
 		OriginalGID(): 0,
 	})
 	if err != nil {
@@ -60,11 +54,29 @@ func OriginalGID() uint32 {
 	return uint32(C.originalGid)
 }
 
-// WriteMap builds a map of Host UID/GID -> Namespace UID/GID
+// WriteUserMap builds a map of Host UID -> Namespace UID
 // Example:
 //
-//	WriteMap(map[uint32]uint32{userns.OriginalUID: 0, 1234: 1234})
-func WriteMap(path string, mapping map[uint32]uint32) error {
+//	WriteUserMap(map[uint32]uint32{userns.OriginalUID: 0, 1234: 1234})
+func WriteUserMap(mapping map[uint32]uint32) error {
+	return writeMap("/proc/self/uid_map", mapping)
+}
+
+// WriteGroupMap builds a map of Host GID -> Namespace GID
+// Example:
+//
+//	WriteGroupMap(map[uint32]uint32{userns.OriginalGID: 0, 1234: 1234})
+func WriteGroupMap(mapping map[uint32]uint32) error {
+	// write deny in setgroups to disable setgroup(2) and enable writing to gid_map
+	err := os.WriteFile("/proc/self/setgroups", []byte("deny\n"), 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to deny setgroups (%v)", err)
+	}
+
+	return writeMap("/proc/self/gid_map", mapping)
+}
+
+func writeMap(path string, mapping map[uint32]uint32) error {
 	lines := []string{}
 	for h, c := range mapping {
 		lines = append(lines, fmt.Sprintf("%d %d 1", c, h))
