@@ -39,10 +39,9 @@ func init() {
 	}
 
 	// write deny in setgroups to disable setgroup(2) and enable writing to gid_map
-	data := []byte("deny\n")
-	err = os.WriteFile("/proc/self/setgroups", data, 0o644)
+	err = os.WriteFile("/proc/self/setgroups", []byte("deny\n"), 0o644)
 	if err != nil {
-		fmt.Println("Error writing to setgroups:", err)
+		panic(fmt.Errorf("failed to deny setgroups: %v", err).Error())
 	}
 
 	err = WriteMap("/proc/self/gid_map", map[uint32]uint32{
