@@ -9,9 +9,11 @@ package userns
 #include <sched.h>
 
  int originalUid = 0;
+ int originalGid = 0;
 
 __attribute((constructor(101))) void enter_userns(void) {
 	originalUid = getuid();
+	originalGid = getgid();
     if (unshare(CLONE_NEWUSER) == -1) {
         exit(1);
     }
@@ -29,11 +31,18 @@ import (
 )
 
 func init() {
-	err := WriteUsermap(map[uint32]uint32{
+	err := WriteUserMap(map[uint32]uint32{
 		OriginalUID(): 0,
 	})
 	if err != nil {
-		panic(fmt.Errorf("failed to create user mapping: %v", err).Error())
+		panic(fmt.Errorf("failed to create uid mapping: %v", err).Error())
+	}
+
+	err = WriteGroupMap(map[uint32]uint32{
+		OriginalGID(): 0,
+	})
+	if err != nil {
+		panic(fmt.Errorf("failed to create gid mapping: %v", err).Error())
 	}
 }
 
@@ -41,15 +50,37 @@ func OriginalUID() uint32 {
 	return uint32(C.originalUid)
 }
 
-// WriteUsermap builds a map of Host UID -> Namespace UID.
+func OriginalGID() uint32 {
+	return uint32(C.originalGid)
+}
+
+// WriteUserMap builds a map of Host UID -> Namespace UID
 // Example:
 //
-//	WriteUsermap(map[uint32]uint32{userns.OriginalUID: 0, 1234: 1234})
-func WriteUsermap(mapping map[uint32]uint32) error {
+//	WriteUserMap(map[uint32]uint32{userns.OriginalUID: 0, 1234: 1234})
+func WriteUserMap(mapping map[uint32]uint32) error {
+	return writeMap("/proc/self/uid_map", mapping)
+}
+
+// WriteGroupMap builds a map of Host GID -> Namespace GID
+// Example:
+//
+//	WriteGroupMap(map[uint32]uint32{userns.OriginalGID: 0, 1234: 1234})
+func WriteGroupMap(mapping map[uint32]uint32) error {
+	// write deny in setgroups to disable setgroup(2) and enable writing to gid_map
+	err := os.WriteFile("/proc/self/setgroups", []byte("deny\n"), 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to deny setgroups (%v)", err)
+	}
+
+	return writeMap("/proc/self/gid_map", mapping)
+}
+
+func writeMap(path string, mapping map[uint32]uint32) error {
 	lines := []string{}
 	for h, c := range mapping {
 		lines = append(lines, fmt.Sprintf("%d %d 1", c, h))
 	}
 	slices.Sort(lines)
-	return os.WriteFile("/proc/self/uid_map", []byte(strings.Join(lines, "\n")), 0o644)
+	return os.WriteFile(path, []byte(strings.Join(lines, "\n")), 0o644)
 }
