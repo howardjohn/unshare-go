@@ -8,7 +8,7 @@ package mountns
 #include <sched.h>
 #include <stdlib.h>
 
-__attribute((constructor(103))) void enter_netns(void) {
+__attribute((constructor(103))) void enter_mountns(void) {
     if (unshare(CLONE_NEWNS) == -1) {
         exit(1);
     }
