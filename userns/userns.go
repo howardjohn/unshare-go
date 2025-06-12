@@ -9,6 +9,8 @@ package userns
 #include <sched.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <string.h>
+#include <errno.h>
 
 int originalUid = 0;
 int originalGid = 0;
@@ -17,17 +19,21 @@ __attribute((constructor(101))) void enter_userns(void) {
 		originalUid = getuid();
 		originalGid = getgid();
     if (unshare(CLONE_NEWUSER) == -1) {
+		fprintf(stderr, "Failed to unshare user namespace: %s\n", strerror(errno));
         exit(1);
     }
 
     int fd = open("/proc/self/uid_map", O_WRONLY);
     if (fd == -1) {
+		fprintf(stderr, "Failed to open /proc/self/uid_map: %s\n", strerror(errno));
         exit(1);
     }
+
     char uid_map[100];
-		snprintf(uid_map, sizeof(uid_map), "0 %d 1\n", originalUid);
+    snprintf(uid_map, sizeof(uid_map), "0 %d 1\n", originalUid);
     if (write(fd, uid_map, sizeof(uid_map)) == -1) {
         close(fd);
+        fprintf(stderr, "Failed to write to /proc/self/uid_map: %s\n", strerror(errno));
         exit(1);
     }
 
