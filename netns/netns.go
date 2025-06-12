@@ -7,9 +7,13 @@ package netns
 
 #include <sched.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
 
 __attribute((constructor(102))) void enter_netns(void) {
     if (unshare(CLONE_NEWNET) == -1) {
+        fprintf(stderr, "Failed to unshare network namespace: %s\n", strerror(errno));
         exit(1);
     }
 }

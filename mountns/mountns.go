@@ -7,9 +7,13 @@ package mountns
 
 #include <sched.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
 
 __attribute((constructor(103))) void enter_mountns(void) {
     if (unshare(CLONE_NEWNS) == -1) {
+        fprintf(stderr, "Failed to unshare mount namespace: %s\n", strerror(errno));
         exit(1);
     }
 }
